@@ -1,12 +1,16 @@
-
 import './App.css';
-import {StreamingData} from './bitquery'
-function App() {
+import { useEffect } from 'react';
+import fetchData from './tv_chart';
+
+export default function App() {
+  useEffect(() => {
+    fetchData();
+  }, []);
+
   return (
-    <div className="App">
-      <StreamingData/>
-    </div>
+    <main>
+      <div id="chart-div"></div>
+      {/* Your component JSX */}
+    </main>
   );
 }
-
-export default App;
