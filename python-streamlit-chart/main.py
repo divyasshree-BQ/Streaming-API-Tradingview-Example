@@ -1,83 +1,65 @@
 import asyncio
-import json
-import websockets
-from streamlit_lightweight_charts import renderLightweightCharts
+from python_graphql_client import GraphqlClient
+from requests.auth import HTTPBasicAuth
+import pandas as pd
+import mplfinance as mpl
+
+auth = HTTPBasicAuth('', 'YOUR API KEY')
+ws = GraphqlClient(endpoint="wss://streaming.bitquery.io/graphql", auth=auth)
+
+# Initialize an empty DataFrame
+ohlc_data = pd.DataFrame(columns=["datetime", "high", "low", "open", "close"])
 
 
-# WebSocket code
-async def my_component():
-  print("line 9")
-  url = 'wss://streaming.bitquery.io/graphql'
-  message = json.dumps({
-      "type": "start",
-      "id": "1",
-      "payload": {
-          "query":
-          "subscription {\n  EVM {\n    DEXTradeByTokens(\n      orderBy: {ascendingByField: \"Block_Time\"}\n      where: {Trade: {Currency: {SmartContract: {is: \"0x\"}}}}\n      limit: {count: 10}\n    ) {\n      Block {\n        Time(interval: {in: days, count: 10})\n      }\n      volume: sum(of: Trade_Amount)\n      Trade {\n        high: Price(maximum: Trade_Price)\n        low: Price(minimum: Trade_Price)\n        open: Price(minimum: Block_Number)\n        close: Price(maximum: Block_Number)\n      }\n      count\n    }\n  }\n}\n",
-          "variables": {}
-      },
-      "headers": {
-          "X-API-KEY": "keyy"
-      }
-  })
+def callback(response):
+  global ohlc_data
 
-  async def connect():
-    async with websockets.connect(url, subprotocols=['graphql-ws']) as ws:
-      await ws.send(message)
+  # Get the new OHLC data from the response
+  new_ohlc_data = response["data"]["EVM"]["DEXTradeByTokens"][0]["Trade"]
+  block_time = response["data"]["EVM"]["DEXTradeByTokens"][0]["Block"]["Time"]
+  print(block_time)
+  # Append the "block_time" column to the new OHLC data
+  new_ohlc_data["datetime"] = block_time
 
-      while True:
-        response = await ws.recv()
-        response = json.loads(response)
+  # Append the new OHLC data to the DataFrame
+  ohlc_data = pd.concat([ohlc_data, pd.DataFrame([new_ohlc_data])],
+                        ignore_index=True)
+  # Convert "datetime" column to DatetimeIndex
+  ohlc_data["datetime"] = pd.to_datetime(ohlc_data["datetime"])
+  ohlc_data.index = pd.DatetimeIndex(ohlc_data["datetime"])
+  print(ohlc_data)
+  print("Updated DataFrame:")
+  mpl.plot(ohlc_data,
+           type='candle',
+           title='USDT Live',
+           ylabel='Price ($)')
 
-        if response.get('type') == 'data':
-          print("line 30")
-          print(type(response["payload"]["data"]["EVM"]["DEXTradeByTokens"]))
 
-          # Prepare data for the chart
-          chart_data = []
-          data = response["payload"]["data"]["EVM"]["DEXTradeByTokens"]
-          for row in data:
-            data_point = {
-                "time": row["Block"]["Time"][0],
-                "open": row["Trade"]["open"],
-                "high": row["Trade"]["high"],
-                "low": row["Trade"]["low"],
-                "close": row["Trade"]["close"],
+async def subscribe_to_transfers():
+  query = """
+    subscription {
+        EVM {
+            DEXTradeByTokens(
+                orderBy: {ascendingByField: "Block_Time"}
+                where: {Trade: {Currency: {SmartContract: {is: "0xdac17f958d2ee523a2206206994597c13d831ec7"}}}}
+                limit: {count: 10}
+            ) {
+                Block {
+                    Time(interval: {in: minutes, count: 10})
+                }
+                volume: sum(of: Trade_Amount)
+                Trade {
+                    high: Price(maximum: Trade_Price)
+                    low: Price(minimum: Trade_Price)
+                    open: Price(minimum: Block_Number)
+                    close: Price(maximum: Block_Number)
+                }
+                count
             }
-            chart_data.append(data_point)
-
-          # Plot the data on a chart
-          chart = {
-              "series": [{
-                  "type": "Candlestick",
-                  "data": chart_data,
-                  "options": {
-                      "height": 400,
-                      "width": 600,
-                      "crosshair": True,
-                      "candlestick": {
-                          "upColor": "green",
-                          "downColor": "red"
-                      }
-                  }
-              }]
-          }
-
-          # Render the chart
-          renderLightweightCharts(charts=[chart])
-
-  await connect()
+        }
+    }
+    """
+  await ws.subscribe(query=query, handle=callback)
 
 
-# Function to start the WebSocket connection
-async def start_websocket():
-  print("line 38")
-  try:
-    await my_component()
-  except Exception as e:
-    print(str(e))
-
-
-# Main function
-if __name__ == "__main__":
-  asyncio.run(start_websocket())
+asyncio.run(subscribe_to_transfers())
