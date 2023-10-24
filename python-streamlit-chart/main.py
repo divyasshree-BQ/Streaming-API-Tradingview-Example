@@ -32,7 +32,9 @@ def callback(response):
   ohlc_data.index = pd.DatetimeIndex(ohlc_data["datetime"])
  
   print("Updated DataFrame:")
-  
+  print(ohlc_data)
+  st.subheader('Daily Metrics')
+  st.bar_chart(ohlc_data,x="datetime", y="high")
 
  
 
