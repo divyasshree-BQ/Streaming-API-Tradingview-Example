@@ -1,8 +1,10 @@
 import { createChart } from "lightweight-charts";
 import axios from "axios";
 
-export default async function fetchData() {
+export async function fetchData() {
+  console.log("I WAS CALLED");
   try {
+    console.log("I WAS CALLED KEEP TRYINg");
     const response = await axios.post(
       "https://streaming.bitquery.io/graphql",
       {
@@ -39,16 +41,14 @@ export default async function fetchData() {
       }
     );
 
-    console.log('resp: ', response);
-
     if (response && response.data) {
       const chartDiv = document.getElementById("chart-div");
-
+      console.log("HEY DUDE")
       if (!chartDiv) {
         console.error("Error: 'chart-div' element not found.");
         throw new Error("Error: 'chart-div' element not found.");
       }
-
+      console.log("HEY DUDE What's UP")
       const chart = createChart(chartDiv, {
         width: 400,
         height: 300,
@@ -56,8 +56,7 @@ export default async function fetchData() {
 
       const candlestickSeries = chart.addCandlestickSeries();
 
-      const  data  = response.data.data.EVM.DEXTradeByTokens;
-      console.log('data here ', data);
+      const data = response.data.data.EVM.DEXTradeByTokens;
 
       const chartData = data.map((item) => ({
         time: new Date(item.Block.Time).toISOString().slice(0, 10),
@@ -66,12 +65,11 @@ export default async function fetchData() {
         low: item.Trade.low,
         close: item.Trade.close,
       }));
-      console.log('chartData ',chartData)
+      
       candlestickSeries.setData(chartData);
-
-    } 
-  }
-  catch (error) {
+      console.log("HEY DUDE DATA SET")
+    }
+  } catch (error) {
     console.error("Error fetching data:", error);
   }
 }
