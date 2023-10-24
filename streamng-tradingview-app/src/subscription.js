@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-
+import tradingViewrenderer from './tradingview'
 export function MyComponent() {
   const [data, setData] = useState([]);
   useEffect(() => {
@@ -32,6 +32,8 @@ export function MyComponent() {
           
           setData(response.payload.data.EVM.DEXTradeByTokens);
           console.log("data",data)
+
+          tradingViewrenderer(data)
         }
       };
       ws.onclose = () => {

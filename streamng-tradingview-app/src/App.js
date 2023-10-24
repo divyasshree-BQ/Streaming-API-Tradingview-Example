@@ -1,11 +1,10 @@
 
-import { useEffect } from 'react';
-import {MyComponent} from './tv_chart.js'
+import {MyComponent} from './subscription.js'
 function App() {
   return (
-    <div className="App">
+    <div id="firstContainer">
      
-      <MyComponent/>
+    
     </div>
   );
 }
