@@ -1,22 +1,13 @@
-import { fetchData } from './tv';
+
 import { useEffect } from 'react';
-import './App.css';
-
-export default function App() {
-  console.log("YOU WERE CALLED");
-
-  useEffect(() => {
-    fetchData();
-  }, []);
-
+import {MyComponent} from './tv_chart.js'
+function App() {
   return (
-    <main>
-      <div style={{
-        alignItems: 'center',
-        justifyContent: 'center',
-        position: 'relative',
-        left: '200px'
-      }} id="chart-div"><h1>TradingView Chart USDT</h1></div>
-    </main>
+    <div className="App">
+     
+      <MyComponent/>
+    </div>
   );
 }
+
+export default App
