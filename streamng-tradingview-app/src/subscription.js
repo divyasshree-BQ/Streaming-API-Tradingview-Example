@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import tradingViewrenderer from './tradingview'
-export function MyComponent() {
+export default function MyComponent() {
+  console.log('STARTED')
   const [data, setData] = useState([]);
   useEffect(() => {
     const url = "wss://streaming.bitquery.io/graphql";
