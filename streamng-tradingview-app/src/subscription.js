@@ -1,25 +1,48 @@
 import React, { useEffect, useState } from "react";
-import tradingViewrenderer from './tradingview'
+
 export default function MyComponent() {
-  console.log('STARTED')
+  console.log("STARTED");
   const [data, setData] = useState([]);
+  const [lastAddedTime, setLastAddedTime] = useState(null);
+
   useEffect(() => {
     const url = "wss://streaming.bitquery.io/graphql";
     const message = JSON.stringify({
       type: "start",
       id: "1",
       payload: {
-        "query": "subscription {\n  EVM {\n    DEXTradeByTokens(\n      orderBy: {ascendingByField: \"Block_Time\"}\n      where: {Trade: {Currency: {SmartContract: {is: \"0xdac17f958d2ee523a2206206994597c13d831ec7\"}}}}\n      limit: {count: 10}\n    ) {\n      Block {\n        Time(interval: {in: minutes, count: 10})\n      }\n      volume: sum(of: Trade_Amount)\n      Trade {\n        high: Price(maximum: Trade_Price)\n        low: Price(minimum: Trade_Price)\n        open: Price(minimum: Block_Number)\n        close: Price(maximum: Block_Number)\n      }\n      count\n    }\n  }\n}",
-        "variables": {},
+        query: `
+          subscription {
+            EVM {
+              DEXTradeByTokens(
+                orderBy: { ascendingByField: "Block_Time" }
+                where: { Trade: { Currency: { SmartContract: { is: "0xdac17f958d2ee523a2206206994597c13d831ec7" } } } }
+                limit: { count: 10 }
+              ) {
+                Block {
+                  Time(interval: { in: seconds, count: 10 })
+                }
+                volume: sum(of: Trade_Amount)
+                Trade {
+                  high: Price(maximum: Trade_Price)
+                  low: Price(minimum: Trade_Price)
+                  open: Price(minimum: Block_Number)
+                  close: Price(maximum: Block_Number)
+                }
+                count
+              }
+            }
+          }
+        `,
+        variables: {},
       },
       headers: {
         "X-API-KEY": "your key here",
       },
     });
-    let ws = new WebSocket(url, "graphql-ws");
 
     const connect = () => {
-      ws = new WebSocket(url, "graphql-ws");
+      let ws = new WebSocket(url, "graphql-ws");
 
       ws.onopen = () => {
         ws.send(message);
@@ -29,26 +52,41 @@ export default function MyComponent() {
         const response = JSON.parse(event.data);
 
         if (response.type === "data") {
-          console.log("line 31")
-          
-          setData(response.payload.data.EVM.DEXTradeByTokens);
-          console.log("data",data)
-
-          tradingViewrenderer(data)
+          const newTrade = response.payload.data.EVM.DEXTradeByTokens[0];
+         
+          // Check the time of the new trade against the last added time state variable
+          if (newTrade.Block.Time !== lastAddedTime) {
+            setData([...data, newTrade]);
+            
+          }
+          setLastAddedTime(newTrade.Block.Time);
         }
+        console.log("DATA ",data)
       };
+
       ws.onclose = () => {
-      //  console.log("WebSocket disconnected. Retrying in 10 seconds...");
+        // console.log("WebSocket disconnected. Retrying in 10 seconds...");
         setTimeout(connect, 10000);
       };
     };
 
     connect();
-  });
+  }, []);
+
   return (
     <div>
-      <h1>Transfer Data:</h1>
-      
+      <h1>Trade Data:</h1>
+      {data.map((trade) => (
+        <div key={trade.Block.Time}>
+          <p>Block Time: {trade.Block.Time}</p>
+          <p>Volume: {trade.volume}</p>
+          <p>Trade High: {trade.Trade.high}</p>
+          <p>Trade Low: {trade.Trade.low}</p>
+          <p>Trade Open: {trade.Trade.open}</p>
+          <p>Trade Close: {trade.Trade.close}</p>
+          <p>Count: {trade.count}</p>
+        </div>
+      ))}
     </div>
   );
 }
