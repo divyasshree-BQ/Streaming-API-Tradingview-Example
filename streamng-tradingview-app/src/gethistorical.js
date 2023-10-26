@@ -1,5 +1,4 @@
 import axios from "axios";
-import React, { useState, useEffect } from "react";
 
 const fetchTradeData = async () => {
   console.log("we came to historical");
@@ -56,7 +55,7 @@ const fetchTradeData = async () => {
     const date = new Date(newTrade["Block"]["Time"]);
 
     // Get the timestamp of the Date object in milliseconds.
-    const timestampInMilliseconds = date.getTime();
+    const timestampInMilliseconds = Math.round(date.getTime() / 1000)
 
     // Create a new object to store the key-value pairs.
     const tradeData = {};
@@ -69,7 +68,7 @@ const fetchTradeData = async () => {
     tradeData["dexhigh"] = newTrade["Trade"]["high"];
     tradeData["dexlow"] = newTrade["Trade"]["low"];
     tradeData["dexclose"] = newTrade["Trade"]["close"];
-
+    console.log("tradeData ",tradeData)
     // Return the tradeData object.
     return tradeData;
   }

@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { createChart } from "lightweight-charts";
+import fetchTradeData from "./gethistorical";
 
+// let oldtradeData = fetchTradeData();
+// console.log(typeof oldtradeData);
 export default function MyComponent() {
   console.log("STARTED");
   const [data, setData] = useState([]);
-  const [lastAddedTime, setLastAddedTime] = useState(null);
-
+  const [timestamp, setTimestamp] = useState(Date.now());
   useEffect(() => {
     const url = "wss://streaming.bitquery.io/graphql";
     const firstChart = createChart(document.getElementById("firstContainer"));
@@ -16,23 +18,26 @@ export default function MyComponent() {
       wickUpColor: "#26a69a",
       wickDownColor: "#ef5350",
     });
-    firstChart.applyOptions({ timeScale: {
-      timeVisible: true,
-      secondsVisible: true,
-    },})
+    firstChart.applyOptions({
+      timeScale: {
+        timeVisible: true,
+        secondsVisible: true,
+      },
+    });
+
     const message = JSON.stringify({
       type: "start",
       id: "1",
       payload: {
         query: `
         subscription {
-          EVM {
+          EVM(network: eth) {
             DEXTradeByTokens(
               orderBy: {ascendingByField: "Block_Time"}
               where: {Trade: {Currency: {SmartContract: {is: "0xdac17f958d2ee523a2206206994597c13d831ec7"}}}}
             ) {
               Block {
-                Time(interval: {in: days, count: 10})
+                Time(interval: {in: seconds})
               }
               volume: sum(of: Trade_Amount)
               Trade {
@@ -45,6 +50,7 @@ export default function MyComponent() {
             }
           }
         }
+        
         
         
         `,
@@ -63,22 +69,20 @@ export default function MyComponent() {
       };
 
       ws.onmessage = (event) => {
+       
         const response = JSON.parse(event.data);
-
+        console.log("ws.onmessage ",response)
         if (response.type === "data") {
           const newTrade = response.payload.data.EVM.DEXTradeByTokens[0];
-          console.log("OUT HERE");
-          // Check the time of the new trade against the last added time state variable
-          // if (newTrade.Block.Time !== lastAddedTime) {
-          //   console.log("IN HERE")
-          setData([...data, newTrade]);
+          console.log("OUT HERE ",newTrade);
 
-          // }
-          // Convert the string to a Date object.
+          setData([...data, newTrade]);
+          setTimestamp(Date.now());
+
           const date = new Date(newTrade["Block"]["Time"]);
 
           // Get the timestamp of the Date object in milliseconds.
-          const timestampInMilliseconds = date.getTime();
+          const timestampInMilliseconds = Math.round(date.getTime() / 1000);
           let dextime = timestampInMilliseconds;
           let dexopen = newTrade["Trade"]["open"];
           let dexhigh = newTrade["Trade"]["high"];
@@ -91,9 +95,7 @@ export default function MyComponent() {
             low: dexlow,
             close: dexclose,
           });
-          setLastAddedTime(newTrade.Block.Time);
         }
-        console.log("DATA ", data);
       };
 
       ws.onclose = () => {
@@ -103,12 +105,30 @@ export default function MyComponent() {
     };
 
     connect();
+    const timer = setInterval(() => {
+      // Update the candlestick chart with the latest trade data.
+     
+      const latestTrade = data[data.length - 1];
+      console.log("latestTrade ", latestTrade);
+      if (latestTrade) {
+        candlestickSeries.update({
+          time: timestamp,
+          open: latestTrade["Trade"]["open"],
+          high: latestTrade["Trade"]["high"],
+          low: latestTrade["Trade"]["low"],
+          close: latestTrade["Trade"]["close"],
+        });
+      }
+      return () => {
+        clearInterval(timer);
+      };
+    }, 1000);
   }, []);
 
   return (
     <div>
       <h1>Trade Data:</h1>
-      <div id="firstContainer" style={{ height: 100, width: 100 }}></div>
+      <div id="firstContainer" style={{ height: 500, width: 80 }}></div>
       {/* <div>
         {data.map((trade) => (
           <div key={trade.Block.Time}>
