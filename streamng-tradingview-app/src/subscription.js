@@ -11,20 +11,27 @@ export default function MyComponent() {
   useEffect(() => {
     const url = "wss://streaming.bitquery.io/graphql";
     const firstChart = createChart(document.getElementById("firstContainer"));
-    const candlestickSeries = firstChart.addCandlestickSeries({
-      upColor: "#26a69a",
-      downColor: "#ef5350",
-      borderVisible: false,
-      wickUpColor: "#26a69a",
-      wickDownColor: "#ef5350",
-    });
+    const candlestickSeries = firstChart.addCandlestickSeries();
+    const volumeSeries = firstChart.addHistogramSeries({
+      priceFormat: {
+          type: 'volume',
+      },
+      priceScaleId: '', // set as an overlay by setting a blank priceScaleId
+  });
+  volumeSeries.priceScale().applyOptions({
+    // set the positioning of the volume series
+    scaleMargins: {
+      top: 0.7, // highest point of the series will be 70% away from the top
+      bottom: 0,
+    },
+  });
     firstChart.applyOptions({
       timeScale: {
         timeVisible: true,
         secondsVisible: true,
       },
     });
-
+    firstChart.timeScale().fitContent();
     const message = JSON.stringify({
       type: "start",
       id: "1",
@@ -34,7 +41,7 @@ export default function MyComponent() {
           EVM(network: eth) {
             DEXTradeByTokens(
               orderBy: {ascendingByField: "Block_Time"}
-              where: {Trade: {Currency: {SmartContract: {is: "0xdac17f958d2ee523a2206206994597c13d831ec7"}}}}
+              where: {Trade: {Currency: {SmartContract: {is: "0xdac17f958d2ee523a2206206994597c13d831ec7"}}, Side: {Currency: {SmartContract: {is: "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2"}}}}}
             ) {
               Block {
                 Time(interval: {in: seconds})
@@ -49,9 +56,7 @@ export default function MyComponent() {
               count
             }
           }
-        }
-        
-        
+        }     
         
         `,
         variables: {},
@@ -88,13 +93,18 @@ export default function MyComponent() {
           let dexhigh = newTrade["Trade"]["high"];
           let dexlow = newTrade["Trade"]["low"];
           let dexclose = newTrade["Trade"]["close"];
-          candlestickSeries.update({
-            time: dextime,
-            open: dexopen,
-            high: dexhigh,
-            low: dexlow,
-            close: dexclose,
-          });
+         
+            candlestickSeries.update({
+              time: dextime,
+              open: dexopen,
+              high: dexhigh,
+              low: dexlow,
+              close: dexclose,
+            });
+            volumeSeries.update({
+              time: timestampInMilliseconds,
+              volume: newTrade["volume"],
+            });
         }
       };
 
@@ -129,19 +139,7 @@ export default function MyComponent() {
     <div>
       <h1>Trade Data:</h1>
       <div id="firstContainer" style={{ height: 500, width: 80 }}></div>
-      {/* <div>
-        {data.map((trade) => (
-          <div key={trade.Block.Time}>
-            <p>Block Time: {trade.Block.Time}</p>
-            <p>Volume: {trade.volume}</p>
-            <p>Trade High: {trade.Trade.high}</p>
-            <p>Trade Low: {trade.Trade.low}</p>
-            <p>Trade Open: {trade.Trade.open}</p>
-            <p>Trade Close: {trade.Trade.close}</p>
-            <p>Count: {trade.count}</p>
-          </div>
-        ))}
-      </div> */}
+   
     </div>
   );
 }
