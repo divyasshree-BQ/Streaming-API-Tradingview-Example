@@ -13,10 +13,8 @@ export default function MyComponent() {
     const firstChart = createChart(document.getElementById("firstContainer"));
     const candlestickSeries = firstChart.addCandlestickSeries();
     const volumeSeries = firstChart.addHistogramSeries({
-      priceFormat: {
-          type: 'volume',
-      },
-      priceScaleId: '', // set as an overlay by setting a blank priceScaleId
+      color: 'rgba(0, 255, 0, 0.4)', // Set the color for the volume bars
+      base: 0, // The base value for the volume bars (usually 0)
   });
   volumeSeries.priceScale().applyOptions({
     // set the positioning of the volume series
@@ -101,9 +99,10 @@ export default function MyComponent() {
               low: dexlow,
               close: dexclose,
             });
+            let dexvol=Number(newTrade["volume"]);
             volumeSeries.update({
               time: timestampInMilliseconds,
-              volume: newTrade["volume"],
+              value: dexvol,
             });
         }
       };
