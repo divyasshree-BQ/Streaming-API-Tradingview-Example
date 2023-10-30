@@ -13,6 +13,10 @@ export default function MyComponent() {
         backgroundColor: "#fff5",
         textColor: "#00000",
       },
+      timeScale: {
+        timeVisible: true,
+        secondsVisible: true,
+      },
     });
     const candlestickSeries = firstChart.addCandlestickSeries({
       upColor: "#4bffb5",
@@ -28,6 +32,7 @@ export default function MyComponent() {
       priceFormat: {
         type: "volume",
       },
+
       overlay: true,
       scaleMargins: {
         top: 0,
@@ -35,12 +40,6 @@ export default function MyComponent() {
       },
     });
 
-    firstChart.applyOptions({
-      timeScale: {
-        timeVisible: true,
-        secondsVisible: true,
-      },
-    });
     firstChart.timeScale().fitContent();
     const message = JSON.stringify({
       type: "start",
@@ -110,11 +109,12 @@ export default function MyComponent() {
             low: dexlow,
             close: dexclose,
           });
-          let dexvol = Number(newTrade["volume"]);
-          // volumeSeries.update({
-          //   time: timestampInMilliseconds,
-          //   value: dexvol,
-          // });
+          let dexvol = newTrade["volume"];
+          const dexvolAsFloat = parseFloat(dexvol);
+          volumeSeries.update({
+            time: timestampInMilliseconds,
+            value: dexvolAsFloat,
+          });
         }
       };
 
@@ -129,7 +129,7 @@ export default function MyComponent() {
       // Update the candlestick chart with the latest trade data.
 
       const latestTrade = data[data.length - 1];
-      console.log("latestTrade ", latestTrade);
+
       if (latestTrade) {
         candlestickSeries.update({
           time: timestamp,
@@ -148,7 +148,7 @@ export default function MyComponent() {
   return (
     <div>
       <h1>Trade Data:</h1>
-      <div id="firstContainer" style={{ height: 500, width: 80 }}></div>
+      <div id="firstContainer" style={{ height: 800, width: 80 }}></div>
     </div>
   );
 }
