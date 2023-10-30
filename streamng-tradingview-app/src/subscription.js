@@ -1,9 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { createChart } from "lightweight-charts";
-import fetchTradeData from "./gethistorical";
 
-// let oldtradeData = fetchTradeData();
-// console.log(typeof oldtradeData);
 export default function MyComponent() {
   console.log("STARTED");
   const [data, setData] = useState([]);
