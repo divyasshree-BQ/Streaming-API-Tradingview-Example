@@ -8,19 +8,42 @@ export default function MyComponent() {
   const [timestamp, setTimestamp] = useState(Date.now());
   useEffect(() => {
     const url = "wss://streaming.bitquery.io/graphql";
-    const firstChart = createChart(document.getElementById("firstContainer"));
-    const candlestickSeries = firstChart.addCandlestickSeries();
+    const firstChart = createChart(document.getElementById("firstContainer"),{
+      layout: {
+        background: {
+          color: '#000000'
+        }},
+        textColor: '#ffffff',
+        grid: {
+          vertLines: {
+            color: '#334158',
+          },
+          horzLines: {
+            color: '#334158',
+          },
+        },
+    });
+    const candlestickSeries = firstChart.addCandlestickSeries({
+      upColor: '#4bffb5',
+      downColor: '#ff4976',
+      borderDownColor: '#ff4976',
+      borderUpColor: '#4bffb5',
+      wickDownColor: '#838ca1',
+      wickUpColor: '#f2e9e9',
+    });
     const volumeSeries = firstChart.addHistogramSeries({
-      color: 'rgba(0, 255, 0, 0.4)', // Set the color for the volume bars
-      base: 0, // The base value for the volume bars (usually 0)
+      color: '#182233',
+      lineWidth: 2,
+      priceFormat: {
+        type: 'volume',
+      },
+      overlay: true,
+      scaleMargins: {
+        top: 0,
+        bottom: 0,
+      },
   });
-  volumeSeries.priceScale().applyOptions({
-    // set the positioning of the volume series
-    scaleMargins: {
-      top: 0.7, // highest point of the series will be 70% away from the top
-      bottom: 0,
-    },
-  });
+ 
     firstChart.applyOptions({
       timeScale: {
         timeVisible: true,
@@ -98,10 +121,10 @@ export default function MyComponent() {
               close: dexclose,
             });
             let dexvol=Number(newTrade["volume"]);
-            volumeSeries.update({
-              time: timestampInMilliseconds,
-              value: dexvol,
-            });
+            // volumeSeries.update({
+            //   time: timestampInMilliseconds,
+            //   value: dexvol,
+            // });
         }
       };
 
@@ -133,7 +156,7 @@ export default function MyComponent() {
   }, []);
 
   return (
-    <div>
+    <div >
       <h1>Trade Data:</h1>
       <div id="firstContainer" style={{ height: 500, width: 80 }}></div>
    
