@@ -8,43 +8,33 @@ export default function MyComponent() {
   const [timestamp, setTimestamp] = useState(Date.now());
   useEffect(() => {
     const url = "wss://streaming.bitquery.io/graphql";
-    const firstChart = createChart(document.getElementById("firstContainer"),{
+    const firstChart = createChart(document.getElementById("firstContainer"), {
       layout: {
-        background: {
-          color: '#000000'
-        },
-        textColor: '#ffffff'      },
-        
-        grid: {
-          vertLines: {
-            color: '#334158',
-          },
-          horzLines: {
-            color: '#334158',
-          },
-        },
+        backgroundColor: "#fff5",
+        textColor: "#00000",
+      },
     });
     const candlestickSeries = firstChart.addCandlestickSeries({
-      upColor: '#4bffb5',
-      downColor: '#ff4976',
-      borderDownColor: '#ff4976',
-      borderUpColor: '#4bffb5',
-      wickDownColor: '#838ca1',
-      wickUpColor: '#f2e9e9',
+      upColor: "#4bffb5",
+      downColor: "#c72867",
+      borderDownColor: "#c72867",
+      borderUpColor: "#4bffb5",
+      wickDownColor: "#c72867",
+      wickUpColor: "#f2e9e9",
     });
     const volumeSeries = firstChart.addHistogramSeries({
-      color: '#182233',
+      color: "#182233",
       lineWidth: 2,
       priceFormat: {
-        type: 'volume',
+        type: "volume",
       },
       overlay: true,
       scaleMargins: {
         top: 0,
         bottom: 0,
       },
-  });
- 
+    });
+
     firstChart.applyOptions({
       timeScale: {
         timeVisible: true,
@@ -94,12 +84,11 @@ export default function MyComponent() {
       };
 
       ws.onmessage = (event) => {
-       
         const response = JSON.parse(event.data);
-        console.log("ws.onmessage ",response)
+        console.log("ws.onmessage ", response);
         if (response.type === "data") {
           const newTrade = response.payload.data.EVM.DEXTradeByTokens[0];
-          console.log("OUT HERE ",newTrade);
+          console.log("OUT HERE ", newTrade);
 
           setData([...data, newTrade]);
           setTimestamp(Date.now());
@@ -107,25 +96,25 @@ export default function MyComponent() {
           const date = new Date(newTrade["Block"]["Time"]);
 
           // Get the timestamp of the Date object in milliseconds.
-          const timestampInMilliseconds = getTimestampInMilliseconds(date)
+          const timestampInMilliseconds = getTimestampInMilliseconds(date);
           let dextime = timestampInMilliseconds;
           let dexopen = newTrade["Trade"]["open"];
           let dexhigh = newTrade["Trade"]["high"];
           let dexlow = newTrade["Trade"]["low"];
           let dexclose = newTrade["Trade"]["close"];
-         
-            candlestickSeries.update({
-              time: dextime,
-              open: dexopen,
-              high: dexhigh,
-              low: dexlow,
-              close: dexclose,
-            });
-            let dexvol=Number(newTrade["volume"]);
-            // volumeSeries.update({
-            //   time: timestampInMilliseconds,
-            //   value: dexvol,
-            // });
+
+          candlestickSeries.update({
+            time: dextime,
+            open: dexopen,
+            high: dexhigh,
+            low: dexlow,
+            close: dexclose,
+          });
+          let dexvol = Number(newTrade["volume"]);
+          // volumeSeries.update({
+          //   time: timestampInMilliseconds,
+          //   value: dexvol,
+          // });
         }
       };
 
@@ -138,7 +127,7 @@ export default function MyComponent() {
     connect();
     const timer = setInterval(() => {
       // Update the candlestick chart with the latest trade data.
-     
+
       const latestTrade = data[data.length - 1];
       console.log("latestTrade ", latestTrade);
       if (latestTrade) {
@@ -157,10 +146,9 @@ export default function MyComponent() {
   }, []);
 
   return (
-    <div >
+    <div>
       <h1>Trade Data:</h1>
       <div id="firstContainer" style={{ height: 500, width: 80 }}></div>
-   
     </div>
   );
 }
