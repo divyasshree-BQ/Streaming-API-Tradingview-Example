@@ -12,8 +12,9 @@ export default function MyComponent() {
       layout: {
         background: {
           color: '#000000'
-        }},
-        textColor: '#ffffff',
+        },
+        textColor: '#ffffff'      },
+        
         grid: {
           vertLines: {
             color: '#334158',
