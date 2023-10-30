@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { createChart } from "lightweight-charts";
+import { getTimestampInMilliseconds } from "./utils";
 
 export default function MyComponent() {
   console.log("STARTED");
@@ -82,7 +83,7 @@ export default function MyComponent() {
           const date = new Date(newTrade["Block"]["Time"]);
 
           // Get the timestamp of the Date object in milliseconds.
-          const timestampInMilliseconds = Math.round(date.getTime() / 1000);
+          const timestampInMilliseconds = getTimestampInMilliseconds(date)
           let dextime = timestampInMilliseconds;
           let dexopen = newTrade["Trade"]["open"];
           let dexhigh = newTrade["Trade"]["high"];
