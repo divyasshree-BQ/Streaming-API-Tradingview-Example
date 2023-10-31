@@ -1,37 +1,47 @@
 import React, { useState, useEffect, useRef } from "react";
-import { createChart } from "lightweight-charts";
-import axios from "axios";
+import { createChart, CrosshairMode } from "lightweight-charts";
 import { getTimestampInMilliseconds } from "./utils";
 
 export default function TradingViewChart() {
   const [resdata, setData] = useState([]);
+  const chartContainerRef = useRef();
+  const chart = useRef();
 
-  console.log("I AM HERE I AM");
   useEffect(() => {
-    console.log("I AM HERE");
-    let chartContainer = document.getElementById("tradingview-chart");
-    const firstChart = createChart(chartContainer, {
+    console.log("chartContainerRef.current ", chartContainerRef.current);
+    chart.current = createChart(chartContainerRef.current, {
+      width: chartContainerRef.current.clientWidth,
+      height: chartContainerRef.current.clientHeight,
       layout: {
-        backgroundColor: "#fff5",
-        textColor: "#00000",
+        backgroundColor: "#253248",
+        textColor: "rgba(255, 255, 255, 0.9)",
+      },
+
+      crosshair: {
+        mode: CrosshairMode.Normal,
       },
       priceScale: {
-        position: "left",
-        // autoscale: true,
+        borderColor: "#485c7b",
       },
       timeScale: {
-        timeVisible: true,
-        secondsVisible: true,
+        borderColor: "#485c7b",
       },
     });
-    const candlestickSeries = firstChart.addCandlestickSeries({
-      upColor: "#4bffb5",
-      downColor: "#c72867",
-      borderDownColor: "#c72867",
-      borderUpColor: "#4bffb5",
-      wickDownColor: "#c72867",
-      wickUpColor: "#f2e9e9",
-    });
+    // let chartContainer = document.getElementById("tradingview-chart");
+    // const firstChart = chart.current.createChart(chartContainerRef, {
+    //   layout: {
+    //     backgroundColor: "#fff5",
+    //     textColor: "#00000",
+    //   },
+    //   priceScale: {
+    //     position: "left",
+
+    //   },
+    //   timeScale: {
+    //     timeVisible: true,
+    //     secondsVisible: true,
+    //   },
+    // });
 
     const fetchData = async () => {
       const response = await fetch("https://streaming.bitquery.io/graphql", {
@@ -70,34 +80,66 @@ export default function TradingViewChart() {
 
       if (response.status === 200) {
         const recddata = await response.json();
-
+        console.log(recddata);
         const responseData = recddata.data.EVM.DEXTradeByTokens;
         setData(responseData);
-      
+
         const extractedData = [];
-        // Iterate through each object in the responseData array
+        const extractedvol = [];
+
         responseData.forEach((record) => {
           const open = record.Trade.open;
           const high = record.Trade.high;
           const low = record.Trade.low;
           const close = record.Trade.close;
-          console.log("record.Block.Date ",record.Block.Date)
-          const resdate =  new Date(record.Block.Date);
-          console.log("resdate ",resdate)
-          console.log("resdate date ",resdate.toISOString().split('T')[0])
-          // Create an object to store the extracted values
+          const recvol = parseFloat(record.volume);
+
+          const resdate = new Date(record.Block.Date);
+
           const extractedItem = {
             open: open,
             high: high,
             low: low,
             close: close,
-            time: resdate.toISOString().split('T')[0],
+            time: resdate.toISOString().split("T")[0],
           };
           // Push the extracted object to the extractedData array
           extractedData.push(extractedItem);
+
+          const extractvol = {
+            value: recvol,
+            time: resdate.toISOString().split("T")[0],
+          };
+          extractedvol.push(extractvol);
         });
-        console.log("extractedData",extractedData);
+        const candlestickSeries = chart.current.addCandlestickSeries({
+          upColor: "#4bffb5",
+          downColor: "#c72867",
+          borderDownColor: "#c72867",
+          borderUpColor: "#4bffb5",
+          wickDownColor: "#c72867",
+          wickUpColor: "#f2e9e9",
+        });
         candlestickSeries.setData(extractedData);
+        const volumeSeries = chart.current.addHistogramSeries({
+          color: "#182233",
+          lineWidth: 2,
+          priceFormat: {
+            type: "volume",
+          },
+          scaleMargins: {
+            top: 0.08,
+            bottom: 0.2,
+          },
+          overlay: true,
+
+          timeScale: {
+            timeVisible: true,
+            secondsVisible: true,
+          },
+        });
+
+        //volumeSeries.setData(extractedvol);
       } else {
         console.log("error");
       }
@@ -109,7 +151,12 @@ export default function TradingViewChart() {
   return (
     <div>
       <h1>Trade Data</h1>
-      <div id="tradingview-chart" style={{ height: 800, width: 80 }}></div>
+      {/* <div id="tradingview-chart" style={{ height: 800, width: 80 }}></div> */}
+      <div
+        ref={chartContainerRef}
+        className="chart-container"
+        style={{ height: 800, width: 800 }}
+      />
     </div>
   );
 }
