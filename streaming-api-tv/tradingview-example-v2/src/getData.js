@@ -41,27 +41,28 @@ export default function TradingViewChart() {
         },
         body: JSON.stringify({
           query: `
-              {
-                EVM(network: eth, dataset: combined) {
-                  DEXTradeByTokens(
-                    orderBy: {ascendingByField: "Block_Time"}
-                    where: {Trade: {Currency: {SmartContract: {is: "0xdac17f958d2ee523a2206206994597c13d831ec7"}}, Side: {Currency: {SmartContract: {is: "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2"}}}}}
-                    limit: {count: 100}
-                  ) {
-                    Block {
-                      Time(interval: {in: seconds})
-                    }
-                    volume: sum(of: Trade_Amount)
-                    Trade {
-                      high: Price(maximum: Trade_Price)
-                      low: Price(minimum: Trade_Price)
-                      open: Price(minimum: Block_Number)
-                      close: Price(maximum: Block_Number)
-                    }
-                    count
-                  }
+          {
+            EVM(network: eth, dataset: combined) {
+              DEXTradeByTokens(
+                orderBy: {ascending: Block_Date}
+                where: {Trade: {Currency: {SmartContract: {is: "0xdac17f958d2ee523a2206206994597c13d831ec7"}}, Side: {Currency: {SmartContract: {is: "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2"}}}}}
+                limit: {count: 100}
+              ) {
+                Block {
+                  Date(interval: {in: days})
                 }
+                volume: sum(of: Trade_Amount)
+                Trade {
+                  high: Price(maximum: Trade_Price)
+                  low: Price(minimum: Trade_Price)
+                  open: Price(minimum: Block_Number)
+                  close: Price(maximum: Block_Number)
+                }
+                count
               }
+            }
+          }
+          
             `,
           variables: "{}",
         }),
@@ -72,21 +73,31 @@ export default function TradingViewChart() {
 
         const responseData = recddata.data.EVM.DEXTradeByTokens;
         setData(responseData);
-        console.log("responseData ", responseData);
-
+      
+        const extractedData = [];
         // Iterate through each object in the responseData array
         responseData.forEach((record) => {
           const open = record.Trade.open;
           const high = record.Trade.high;
           const low = record.Trade.low;
           const close = record.Trade.close;
-
-          // You can use these variables or store them in an array, object, etc.
-          console.log("Open:", open);
-          console.log("High:", high);
-          console.log("Low:", low);
-          console.log("Close:", close);
+          console.log("record.Block.Date ",record.Block.Date)
+          const resdate =  new Date(record.Block.Date);
+          console.log("resdate ",resdate)
+          console.log("resdate date ",resdate.toISOString().split('T')[0])
+          // Create an object to store the extracted values
+          const extractedItem = {
+            open: open,
+            high: high,
+            low: low,
+            close: close,
+            time: resdate.toISOString().split('T')[0],
+          };
+          // Push the extracted object to the extractedData array
+          extractedData.push(extractedItem);
         });
+        console.log("extractedData",extractedData);
+        candlestickSeries.setData(extractedData);
       } else {
         console.log("error");
       }
