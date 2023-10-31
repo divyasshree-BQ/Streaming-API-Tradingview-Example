@@ -11,3 +11,6 @@ realtime volume
 https://jsfiddle.net/rondolfo/0zg7u9tv/57/
 
 
+https://github.com/tradingview/lightweight-charts/discussions/679
+
+
