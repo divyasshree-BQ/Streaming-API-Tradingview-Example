@@ -20,28 +20,16 @@ export default function TradingViewChart() {
       crosshair: {
         mode: CrosshairMode.Normal,
       },
-      priceScale: {
-        borderColor: "#485c7b",
+      rightPriceScale: {
+        visible: false,
+      },
+      leftPriceScale: {
+        visible: true,
       },
       timeScale: {
         borderColor: "#485c7b",
       },
     });
-    // let chartContainer = document.getElementById("tradingview-chart");
-    // const firstChart = chart.current.createChart(chartContainerRef, {
-    //   layout: {
-    //     backgroundColor: "#fff5",
-    //     textColor: "#00000",
-    //   },
-    //   priceScale: {
-    //     position: "left",
-
-    //   },
-    //   timeScale: {
-    //     timeVisible: true,
-    //     secondsVisible: true,
-    //   },
-    // });
 
     const fetchData = async () => {
       const response = await fetch("https://streaming.bitquery.io/graphql", {
@@ -56,7 +44,7 @@ export default function TradingViewChart() {
               DEXTradeByTokens(
                 orderBy: {ascending: Block_Date}
                 where: {Trade: {Currency: {SmartContract: {is: "0xdac17f958d2ee523a2206206994597c13d831ec7"}}, Side: {Currency: {SmartContract: {is: "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2"}}}}}
-                limit: {count: 100}
+                limit: {count: 200}
               ) {
                 Block {
                   Date(interval: {in: days})
@@ -112,6 +100,7 @@ export default function TradingViewChart() {
           };
           extractedvol.push(extractvol);
         });
+        console.log("extractedvol ", extractedvol);
         const candlestickSeries = chart.current.addCandlestickSeries({
           upColor: "#4bffb5",
           downColor: "#c72867",
@@ -122,24 +111,19 @@ export default function TradingViewChart() {
         });
         candlestickSeries.setData(extractedData);
         const volumeSeries = chart.current.addHistogramSeries({
-          color: "#182233",
-          lineWidth: 2,
           priceFormat: {
-            type: "volume",
+            type: 'volume',
           },
           scaleMargins: {
-            top: 0.08,
-            bottom: 0.2,
+            top: 0.8,
+            bottom: 0,
           },
           overlay: true,
-
-          timeScale: {
-            timeVisible: true,
-            secondsVisible: true,
-          },
+          priceScaleId: '',
+          color:"#f4cccc"
         });
 
-        //volumeSeries.setData(extractedvol);
+        volumeSeries.setData(extractedvol);
       } else {
         console.log("error");
       }
