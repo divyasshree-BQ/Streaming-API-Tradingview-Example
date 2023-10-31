@@ -102,11 +102,11 @@ export default function TradingViewChart() {
         });
         console.log("extractedvol ", extractedvol);
         const candlestickSeries = chart.current.addCandlestickSeries({
-          upColor: "#4bffb5",
-          downColor: "#c72867",
-          borderDownColor: "#c72867",
-          borderUpColor: "#4bffb5",
-          wickDownColor: "#c72867",
+          upColor: "#008000",
+          downColor: "#FF0000",
+          borderDownColor: "#FF0000",
+          borderUpColor: "#008000",
+          wickDownColor: "#FF0000",
           wickUpColor: "#f2e9e9",
         });
         candlestickSeries.setData(extractedData);
