@@ -17,7 +17,7 @@ export default function MyComponent() {
       },
       priceScale: {
         position: "left",
-        autoscale: true,
+        // autoscale: true,
       },
       timeScale: {
         timeVisible: true,
@@ -42,6 +42,11 @@ export default function MyComponent() {
         },
 
         overlay: true,
+
+        priceRange: {
+          minValue: 0,
+          maxValue: 100,
+        },
       },
       []
     );
