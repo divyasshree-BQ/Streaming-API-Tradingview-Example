@@ -5,3 +5,9 @@
 
 https://codesandbox.io/s/tradingview-lightweight-candlestick-9inkb?file=/src/index.js:1176-1185
 
+
+realtime volume
+
+https://jsfiddle.net/rondolfo/0zg7u9tv/57/
+
+

@@ -1,23 +1,30 @@
-import React, { useEffect, useState } from "react";
-import { createChart } from "lightweight-charts";
+import React, { useEffect, useState, useRef } from "react";
+import { createChart, PriceScaleMode } from "lightweight-charts";
 import { getTimestampInMilliseconds } from "./utils";
 
 export default function MyComponent() {
   console.log("STARTED");
   const [data, setData] = useState([]);
   const [timestamp, setTimestamp] = useState(Date.now());
+
   useEffect(() => {
+    let chartContainer = document.getElementById("firstContainer");
     const url = "wss://streaming.bitquery.io/graphql";
-    const firstChart = createChart(document.getElementById("firstContainer"), {
+    const firstChart = createChart(chartContainer, {
       layout: {
         backgroundColor: "#fff5",
         textColor: "#00000",
+      },
+      priceScale: {
+        position: "left",
+        autoscale: true,
       },
       timeScale: {
         timeVisible: true,
         secondsVisible: true,
       },
     });
+
     const candlestickSeries = firstChart.addCandlestickSeries({
       upColor: "#4bffb5",
       downColor: "#c72867",
@@ -26,19 +33,18 @@ export default function MyComponent() {
       wickDownColor: "#c72867",
       wickUpColor: "#f2e9e9",
     });
-    const volumeSeries = firstChart.addHistogramSeries({
-      color: "#182233",
-      lineWidth: 2,
-      priceFormat: {
-        type: "volume",
-      },
+    const volumeSeries = firstChart.addHistogramSeries(
+      {
+        color: "#182233",
+        lineWidth: 2,
+        priceFormat: {
+          type: "volume",
+        },
 
-      overlay: true,
-      scaleMargins: {
-        top: 0,
-        bottom: 0,
+        overlay: true,
       },
-    });
+      []
+    );
 
     firstChart.timeScale().fitContent();
     const message = JSON.stringify({
